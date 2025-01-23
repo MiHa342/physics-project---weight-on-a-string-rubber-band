@@ -1,0 +1,83 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+def voigt_model_length(t, L0, E, F, V, eta):
+    """
+    Calculates the length of the string at time t using the Voigt model.
+
+    Parameters:
+    - t: Time (seconds)
+    - L0: Original length (meters)
+    - E: Young's modulus (Pascals)
+    - F: Force (Newtons)
+    - V: Volume (cubic meters)
+    - eta: Viscosity coefficient (Pa·s)
+
+    Returns:
+    - Length of the string at time t (meters)
+    """
+    # Compute alpha
+    alpha = (F / V) - (E / L0)
+    
+    # Validate alpha to prevent division by zero or invalid operations
+    if np.isclose(alpha, 0):
+        raise ValueError("Invalid parameters: (F/V) must not equal (E/L0). Check your input values.")
+    
+    # Exponential term
+    exp_term = np.exp((L0 / eta) * alpha * t)
+    
+    # Calculate the length using the corrected formula
+    L_t = (L0 + E / alpha) * exp_term - E / alpha
+    return L_t
+
+def simulate_string_length(L0, E, F, V, eta, t_max, dt):
+    """
+    Simulates the length of the string over time.
+
+    Parameters:
+    - L0: Original length (meters)
+    - E: Young's modulus (Pascals)
+    - F: Force (Newtons)
+    - V: Volume (cubic meters)
+    - eta: Viscosity coefficient (Pa·s)
+    - t_max: Maximum simulation time (seconds)
+    - dt: Time step (seconds)
+
+    Returns:
+    - times: Array of time points (seconds)
+    - lengths: Array of string lengths at each time point (meters)
+    """
+    times = np.arange(0, t_max + dt, dt)
+    lengths = [voigt_model_length(t, L0, E, F, V, eta) for t in times]
+    return times, lengths
+
+def main():
+    # Parameters
+    L0 = 1.0  # Original length (meters)
+    E = 2.0e6  # Young's modulus (Pascals)
+    F = 150.0  # Force (Newtons)
+    V = 0.001  # Volume (cubic meters)
+    eta = 5e5  # Viscosity coefficient (Pa·s)
+    t_max = 20.0  # Maximum simulation time (seconds)
+    dt = 0.1  # Time step (seconds)
+
+    # Simulate
+    times, lengths = simulate_string_length(L0, E, F, V, eta, t_max, dt)
+
+    # Print lengths at integer time points
+    for time, length in zip(times, lengths):
+        if time.is_integer():
+            print(f"Time = {int(time)} s, Length = {length:.6f} m")
+
+    # Plot
+    plt.figure(figsize=(10, 6))
+    plt.plot(times, lengths, label="String Length")
+    plt.title("Nylon String Length over Time")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Length (m)")
+    plt.grid(True)
+    plt.legend()
+    plt.show()
+
+if __name__ == "__main__":
+    main()
